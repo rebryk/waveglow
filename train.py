@@ -177,6 +177,6 @@ if __name__ == "__main__":
     if num_gpus == 1 and args.rank != 0:
         raise Exception("Doing single GPU training on rank > 0")
 
-    torch.backends.cudnn.enabled = False
+    torch.backends.cudnn.enabled = True
     torch.backends.cudnn.benchmark = False
     train(num_gpus, args.rank, args.group_name, **train_config)
