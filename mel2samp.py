@@ -79,7 +79,8 @@ class KentavrMel2Samp(torch.utils.data.Dataset):
                  sampling_rate,
                  mel_fmin=0.0,
                  mel_fmax=None,
-                 power=1.0):
+                 power=1.0,
+                 use_cache=True):
         self.audio_files = files_to_list(training_files)
         random.seed(1234)
         random.shuffle(self.audio_files)
@@ -91,6 +92,8 @@ class KentavrMel2Samp(torch.utils.data.Dataset):
         self.fmin = mel_fmin
         self.fmax = mel_fmax
         self.power = power
+        self.use_cache = use_cache
+        self._cache = {}
 
     def get_mel(self, audio):
         complex_spec = librosa.stft(y=audio, n_fft=self.n_fft)
@@ -105,7 +108,14 @@ class KentavrMel2Samp(torch.utils.data.Dataset):
 
     def __getitem__(self, index):
         filename = self.audio_files[index]
-        audio, sampling_rate = librosa.load(filename, self.sampling_rate)
+
+        if filename in self._cache:
+            audio, sampling_rate = self._cache[filename]
+        else:
+            audio, sampling_rate = librosa.load(filename, self.sampling_rate)
+
+            if self.use_cache:
+                self._cache[filename] = audio, sampling_rate
 
         if sampling_rate != self.sampling_rate:
             raise ValueError("{} SR doesn't match target {} SR".format(
