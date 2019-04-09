@@ -36,7 +36,7 @@ from torch.utils.data.distributed import DistributedSampler
 
 from torch.utils.data import DataLoader
 from glow import WaveGlow, WaveGlowLoss
-from mel2samp import Mel2Samp
+from mel2samp import KentavrMel2Samp, Mel2Samp
 
 def load_checkpoint(checkpoint_path, model, optimizer):
     assert os.path.isfile(checkpoint_path)
@@ -90,7 +90,7 @@ def train(num_gpus, rank, group_name, output_directory, epochs, learning_rate,
                                                       optimizer)
         iteration += 1  # next iteration is iteration + 1
 
-    trainset = Mel2Samp(**data_config)
+    trainset = KentavrMel2Samp(**data_config)
     # =====START: ADDED FOR DISTRIBUTED======
     train_sampler = DistributedSampler(trainset) if num_gpus > 1 else None
     # =====END:   ADDED FOR DISTRIBUTED======
@@ -177,6 +177,6 @@ if __name__ == "__main__":
     if num_gpus == 1 and args.rank != 0:
         raise Exception("Doing single GPU training on rank > 0")
 
-    torch.backends.cudnn.enabled = True
+    torch.backends.cudnn.enabled = False
     torch.backends.cudnn.benchmark = False
     train(num_gpus, args.rank, args.group_name, **train_config)
