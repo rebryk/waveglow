@@ -62,6 +62,13 @@ def load_wav_to_torch(full_path):
     return torch.from_numpy(data).float(), sampling_rate
 
 
+def normalize(features, mean, std):
+  """
+  Normalizes features with the specificed mean and std
+  """
+  return (features - mean) / std
+
+
 class KentavrMel2Samp(torch.utils.data.Dataset):
     def __init__(self,
                  training_files,
@@ -92,6 +99,7 @@ class KentavrMel2Samp(torch.utils.data.Dataset):
         mel_basis = librosa.filters.mel(self.sampling_rate, self.n_fft, self.n_mels, self.fmin, self.fmax)
         mel = np.dot(mel_basis, mag)
         mel = np.log(np.clip(mel, a_min=1e-5, a_max=None)).T
+        mel = normalize(mel, mean=np.log(1e-5) / 2, std=1.0)
 
         return mel.T
 
